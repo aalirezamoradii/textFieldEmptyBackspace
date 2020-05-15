@@ -10,15 +10,17 @@ import UIKit
 @IBDesignable
 class TextField: UITextField {
     
+    weak var delegatePlus:UITextFieldDelegatePlus? {
+        didSet {
+            delegate = delegatePlus
+        }
+    }
     
-    @IBOutlet weak var delegatePlus:UITextFieldDelegatePlus?
-    
-    private var padding = UIEdgeInsets.zero
+    private lazy var padding = UIEdgeInsets.zero
     
     
     override func awakeFromNib() {
         super.awakeFromNib()
-        delegate = delegatePlus
         addTarget(self, action: #selector(textFeildChangeEditing(_:)), for: .editingChanged)
     }
     @objc func textFeildChangeEditing(_ textField: UITextField) {

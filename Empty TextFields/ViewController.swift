@@ -9,8 +9,14 @@
 import UIKit
 
 class ViewController: UIViewController {
-
-    @IBOutlet var textFeild: [UITextField]!
+    
+    @IBOutlet var textFeild: [TextField]! {
+        didSet {
+            for txt in textFeild {
+                txt.delegatePlus = self
+            }
+        }
+    }
     
     private let btnBack = UIButton(type: .system)
     
@@ -22,6 +28,7 @@ class ViewController: UIViewController {
         NotificationCenter.default.removeObserver(self)
     }
     private func start() {
+        btnBack.translatesAutoresizingMaskIntoConstraints = false
         btnBack.backgroundColor = .clear
         btnBack.layer.cornerRadius = 5
         btnBack.addTarget(self, action: #selector(textFeildBack), for: .touchUpInside)
@@ -30,59 +37,62 @@ class ViewController: UIViewController {
     @objc private func addviewtokeyboard(_ notification: NSNotification) {
         if let keyboardFrame: NSValue = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue {
             let keyboardRectangle = keyboardFrame.cgRectValue
-            let safeArea = UIApplication.shared.connectedScenes
-            .filter({$0.activationState == .foregroundActive})
-            .map({$0 as? UIWindowScene})
-            .compactMap({$0})
-            .first?.windows
-                .filter({$0.isKeyWindow}).first?.safeAreaInsets.bottom
+            let safeArea = view.safeAreaInsets.bottom
             let x = keyboardRectangle.height / 4
-            let h = ((keyboardRectangle.height - x) / 4) - 8
-            let w = (keyboardRectangle.width / 3) - 8
-            let z = safeArea == 0 ? 3 : x+4
-            let width = UIScreen.main.bounds.width
-            btnBack.frame.size = CGSize(width: w, height: h)
-            btnBack.frame.origin = CGPoint(x: width - w - 8, y: (keyboardRectangle.maxY - h) - z)
+            let width = (keyboardRectangle.width / 3) - 8
+            let bottom = safeArea == 0 ? 2 : x+4
+            let height = x - (bottom/4) - 8
             let windowCount = UIApplication.shared.windows.count
-            UIApplication.shared.windows[windowCount-1].addSubview(btnBack)
+            let keyboard = UIApplication.shared.windows[windowCount-1]
+            keyboard.addSubview(btnBack)
+
+            keyboard.trailingAnchor.constraint(equalTo: btnBack.trailingAnchor, constant: 6).isActive = true
+            btnBack.widthAnchor.constraint(equalToConstant: width).isActive = true
+            btnBack.heightAnchor.constraint(equalToConstant: height).isActive = true
+            keyboard.bottomAnchor.constraint(equalTo: btnBack.bottomAnchor, constant: bottom).isActive = true
+            
         }
     }
     @objc private func textFeildBack() {
         for i in 0..<textFeild.count {
             if textFeild[i].isFirstResponder {
-                textFeild[i-1].text?.removeLast()
+                if !textFieldEmpty(i-1) {
+                    textFeild[i-1].text?.removeLast()
+                }
                 textFeild[i-1].becomeFirstResponder()
             }
         }
     }
-
+    
 }
 extension ViewController: UITextFieldDelegatePlus {
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         view.endEditing(true)
     }
-    
+    func textFieldEmpty(_ index: Int) -> Bool {
+        textFeild[index].text?.isEmpty ?? true
+    }
     func textFeildChangeEditing(_ textField: UITextField) {
         switch textField {
         case textFeild[0]:
-            if !(textFeild[0].text?.isEmpty ?? true) { textFeild[1].becomeFirstResponder() }
+            if !textFieldEmpty(0) { textFeild[1].becomeFirstResponder() }
         case textFeild[1]:
-            if !(textFeild[1].text?.isEmpty ?? true) {
+            if !textFieldEmpty(1) {
                 btnBack.isHidden = true
                 textFeild[2].becomeFirstResponder()
             } else {
                 btnBack.isHidden = false
             }
         case textFeild[2]:
-            if !(textFeild[2].text?.isEmpty ?? true) {
+            if !textFieldEmpty(2) {
                 btnBack.isHidden = true
                 textFeild[3].becomeFirstResponder()
             } else {
                 btnBack.isHidden = false
             }
         case textFeild[3]:
-            if !(textFeild[3].text?.isEmpty ?? true) {
+            if !textFieldEmpty(3) {
                 btnBack.isHidden = true
                 textFeild[3].resignFirstResponder()
             } else {
@@ -103,19 +113,19 @@ extension ViewController: UITextFieldDelegatePlus {
         case textFeild[0]:
             btnBack.isHidden = true
         case textFeild[1]:
-            if !(textFeild[1].text?.isEmpty ?? true) {
+            if !textFieldEmpty(1) {
                 btnBack.isHidden = true
             } else {
                 btnBack.isHidden = false
             }
         case textFeild[2]:
-            if !(textFeild[2].text?.isEmpty ?? true) {
+            if !textFieldEmpty(2) {
                 btnBack.isHidden = true
             } else {
                 btnBack.isHidden = false
             }
         case textFeild[3]:
-            if !(textFeild[3].text?.isEmpty ?? true) {
+            if !textFieldEmpty(3) {
                 btnBack.isHidden = true
             } else {
                 btnBack.isHidden = false
@@ -125,6 +135,6 @@ extension ViewController: UITextFieldDelegatePlus {
         }
     }
 }
-@objc public protocol UITextFieldDelegatePlus: UITextFieldDelegate {
+protocol UITextFieldDelegatePlus: UITextFieldDelegate {
     func textFeildChangeEditing(_ textField: UITextField)
 }
