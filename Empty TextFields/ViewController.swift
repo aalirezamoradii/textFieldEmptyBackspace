@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import AVFoundation
 
 class ViewController: UIViewController {
     
@@ -19,6 +20,7 @@ class ViewController: UIViewController {
     }
     
     private let btnBack = UIButton(type: .system)
+    var audioPlayer:AVAudioPlayer?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -28,11 +30,17 @@ class ViewController: UIViewController {
         NotificationCenter.default.removeObserver(self)
     }
     private func start() {
+        playSound()
         btnBack.translatesAutoresizingMaskIntoConstraints = false
         btnBack.backgroundColor = .clear
         btnBack.layer.cornerRadius = 5
         btnBack.addTarget(self, action: #selector(textFeildBack), for: .touchUpInside)
         NotificationCenter.default.addObserver(self, selector: #selector(addviewtokeyboard), name: UIResponder.keyboardDidShowNotification, object: nil)
+    }
+    func playSound() {
+        let backSound = URL(fileURLWithPath: Bundle.main.path(forResource: "back", ofType: "mp3") ?? "")
+        audioPlayer = try! AVAudioPlayer(contentsOf: backSound)
+        audioPlayer?.prepareToPlay()
     }
     @objc private func addviewtokeyboard(_ notification: NSNotification) {
         if let keyboardFrame: NSValue = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue {
@@ -60,6 +68,7 @@ class ViewController: UIViewController {
                     textFeild[i-1].text?.removeLast()
                 }
                 textFeild[i-1].becomeFirstResponder()
+                audioPlayer?.play()
             }
         }
     }
